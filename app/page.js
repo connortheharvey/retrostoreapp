@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import Link from "next/link";
 
 function Stars({ value }) {
   const rounded = Math.round(value);
@@ -17,6 +18,17 @@ function avgRating(reviews) {
   return reviews.reduce((s, r) => s + r.rating, 0) / reviews.length;
 }
 
+function haversineMiles(lat1, lon1, lat2, lon2) {
+  const R = 3958.8;
+  const toRad = (d) => (d * Math.PI) / 180;
+  const dLat = toRad(lat2 - lat1);
+  const dLon = toRad(lon2 - lon1);
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) ** 2;
+  return R * 2 * Math.asin(Math.sqrt(a));
+}
+
 export default function Home() {
   const [stores, setStores] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -27,6 +39,8 @@ export default function Home() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [newStore, setNewStore] = useState({ name: "", address: "", description: "", specialties: "", website: "" });
   const [reviewDrafts, setReviewDrafts] = useState({});
+  const [userCoords, setUserCoords] = useState(null);
+  const [locating, setLocating] = useState(false);
 
   function showToast(msg) {
     setToast(msg);
@@ -48,6 +62,27 @@ export default function Home() {
   useEffect(() => {
     loadData();
   }, []);
+
+  function findNearMe() {
+    if (!navigator.geolocation) {
+      showToast("Your browser doesn't support location.");
+      return;
+    }
+    setLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setUserCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+        setSort("distance");
+        setLocating(false);
+        showToast("Sorted by distance from you.");
+      },
+      () => {
+        setLocating(false);
+        showToast("Couldn't get your location. Check your browser's permission settings.");
+      },
+      { timeout: 8000 }
+    );
+  }
 
   async function submitStore() {
     if (!newStore.name.trim() || !newStore.address.trim()) {
@@ -125,29 +160,40 @@ export default function Home() {
       s.name.toLowerCase().includes(search.toLowerCase()) ||
       s.address.toLowerCase().includes(search.toLowerCase())
   );
+
+  function distanceOf(s) {
+    if (!userCoords || s.latitude == null || s.longitude == null) return Infinity;
+    return haversineMiles(userCoords.lat, userCoords.lng, s.latitude, s.longitude);
+  }
+
   if (sort === "rating") list = [...list].sort((a, b) => avgRating(b.reviews) - avgRating(a.reviews));
   else if (sort === "reviews") list = [...list].sort((a, b) => (b.reviews?.length || 0) - (a.reviews?.length || 0));
   else if (sort === "name") list = [...list].sort((a, b) => a.name.localeCompare(b.name));
+  else if (sort === "distance") list = [...list].sort((a, b) => distanceOf(a) - distanceOf(b));
 
   return (
     <>
       <header className="site-header">
-        <div className="brand">
-          <div>
-            <span className="logo">RETROSTORE PORTAL</span>
-            <small>&gt; find your next cartridge_</small>
+        <div className="site-header-inner">
+          <div className="brand">
+            <div>
+              <span className="logo">RETROFIND</span>
+              <small>&gt; find your next cartridge_</small>
+            </div>
           </div>
+          <button className="btn btn-primary" onClick={() => setShowAddModal(true)}>
+            + Add a Store
+          </button>
         </div>
-        <button className="btn btn-primary" onClick={() => setShowAddModal(true)}>
-          + Add a Store
-        </button>
+        <div className="marquee-lights" aria-hidden="true">
+          {Array.from({ length: 40 }).map((_, i) => <span key={i}></span>)}
+        </div>
       </header>
 
       <div className="hero">
         <div className="hero-copy">
           <h1>
-            Find the <span className="accent">good</span> retro stores.<br />
-            Skip the dusty scams.
+            <span className="chrome-text">Find the <span className="pink">good</span> retro stores.</span>
           </h1>
           <p className="sub">
             Arcades, cartridge shops, repair counters — reviewed by the people who actually dig through
@@ -160,12 +206,12 @@ export default function Home() {
           </div>
         </div>
         <div className="mascot-wrap">
-          <svg className="console" viewBox="0 0 200 160" width="200">
-            <rect x="20" y="40" width="160" height="80" rx="14" fill="#6C4FE0" stroke="#4CE0D2" strokeWidth="3"/>
-            <rect x="40" y="60" width="50" height="16" rx="4" fill="#14133D"/>
-            <circle cx="150" cy="68" r="10" fill="#FF4FA3"/>
-            <circle cx="130" cy="90" r="10" fill="#FFC94C"/>
-            <rect x="85" y="20" width="30" height="26" rx="4" fill="#4CE0D2"/>
+          <svg className="console" viewBox="0 0 200 160" width="190">
+            <rect x="20" y="40" width="160" height="80" rx="14" fill="#231F2E" stroke="#FF2D78" strokeWidth="3"/>
+            <rect x="40" y="60" width="50" height="16" rx="4" fill="#0B0B10"/>
+            <circle cx="150" cy="68" r="10" fill="#22E5B0"/>
+            <circle cx="130" cy="90" r="10" fill="#FFB627"/>
+            <rect x="85" y="20" width="30" height="26" rx="4" fill="#FF2D78"/>
           </svg>
         </div>
       </div>
@@ -181,7 +227,11 @@ export default function Home() {
           <option value="rating">Sort: Highest rated</option>
           <option value="reviews">Sort: Most reviewed</option>
           <option value="name">Sort: Name (A–Z)</option>
+          {userCoords && <option value="distance">Sort: Nearest to me</option>}
         </select>
+        <button className="btn btn-teal locate-btn" onClick={findNearMe} disabled={locating}>
+          📍 {locating ? "Locating…" : "Find stores near me"}
+        </button>
       </div>
 
       {loading ? (
@@ -196,15 +246,20 @@ export default function Home() {
             const isLow = avg > 0 && avg <= 2 && (s.reviews?.length || 0) >= 2;
             const isOpen = openId === s.id;
             const draft = reviewDrafts[s.id] || {};
+            const dist = distanceOf(s);
+            const mapsQuery = encodeURIComponent(s.address);
             return (
               <div key={s.id} className={`card ${isGold ? "golden" : ""} ${isLow ? "low-score" : ""}`}>
+                {isGold && <span className="price-tag">TOP SCORE</span>}
+                {isLow && <span className="price-tag low">GAME OVER</span>}
                 <div className="card-top">
                   <div>
-                    <h3>{s.name}</h3>
+                    <h3><Link href={`/store/${s.id}`}>{s.name}</Link></h3>
                     <div className="loc">📍 {s.address}</div>
+                    {userCoords && dist !== Infinity && (
+                      <div className="distance">{dist.toFixed(1)} mi away</div>
+                    )}
                   </div>
-                  {isGold && <span className="badge gold">TOP SCORE</span>}
-                  {isLow && <span className="badge low">GAME OVER</span>}
                 </div>
                 <div>
                   <Stars value={avg} />
@@ -216,16 +271,19 @@ export default function Home() {
                   ))}
                 </div>
                 <div className="desc">{s.description}</div>
-                {s.website && (
-                  <div className="desc"><a href={s.website} target="_blank" rel="noreferrer">{s.website}</a></div>
-                )}
-                <div className="review-count">{s.reviews?.length || 0} review{(s.reviews?.length || 0) !== 1 ? "s" : ""}</div>
+                <div className="review-count">{s.reviews?.length || 0} review{(s.reviews?.length || 0) !== 1 ? "s" : ""} · {s.photos?.length || 0} photo{(s.photos?.length || 0) !== 1 ? "s" : ""}</div>
+
+                <div className="maps-row">
+                  <a className="btn btn-teal btn-sm" href={`https://www.google.com/maps/search/?api=1&query=${mapsQuery}`} target="_blank" rel="noreferrer">Google Maps</a>
+                  <a className="btn btn-ghost btn-sm" href={`https://maps.apple.com/?q=${mapsQuery}`} target="_blank" rel="noreferrer">Apple Maps</a>
+                </div>
+
                 <div className="card-actions">
-                  <button className="btn btn-ghost" onClick={() => setOpenId(isOpen ? null : s.id)}>
-                    {isOpen ? "Hide reviews" : "Read reviews"}
-                  </button>
+                  <Link href={`/store/${s.id}`} className="btn btn-ghost" style={{ textDecoration: "none", textAlign: "center" }}>
+                    View store & photos
+                  </Link>
                   <button className="btn btn-primary" onClick={() => setOpenId(isOpen ? null : s.id)}>
-                    {isOpen ? "Never mind" : "Leave a review"}
+                    {isOpen ? "Hide reviews" : "Quick review"}
                   </button>
                 </div>
 
@@ -294,7 +352,7 @@ export default function Home() {
       )}
 
       <footer>
-        RetroStorePortal — built by collectors, for collectors. Reviews are public. See something wrong? Hit Report.
+        RetroFind — built by collectors, for collectors. Reviews are public. See something wrong? Hit Report.
       </footer>
 
       {showAddModal && (
@@ -332,6 +390,10 @@ export default function Home() {
               value={newStore.website}
               onChange={(e) => setNewStore({ ...newStore, website: e.target.value })}
             />
+            <p style={{ fontSize: "0.75rem", color: "var(--ink-faint)", marginTop: 10 }}>
+              Note: stores added here won&apos;t show a distance in &quot;near me&quot; sorting yet —
+              coordinates for user-submitted stores are on the roadmap.
+            </p>
             <div className="modal-actions">
               <button className="btn btn-ghost" onClick={() => setShowAddModal(false)}>Never mind</button>
               <button className="btn btn-primary" onClick={submitStore}>Add to the map</button>

@@ -6,7 +6,7 @@ export async function GET() {
 
   const { data, error } = await supabase
     .from("stores")
-    .select("*, reviews(id, reviewer_name, rating, comment, flagged, created_at)")
+    .select("*, reviews(id, reviewer_name, rating, comment, flagged, created_at), photos(id, url, created_at)")
     .order("created_at", { ascending: true });
 
   if (error) {

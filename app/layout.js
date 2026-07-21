@@ -1,8 +1,8 @@
 import "./globals.css";
 
 export const metadata = {
-  title: "RetroStorePortal — Find & Review Retro Game Stores",
-  description: "Discover and review local retro video game stores — arcades, cartridge shops, and repair counters near you.",
+  title: "RetroFind — Discover Retro Game Stores",
+  description: "Find and review retro video game stores near you — arcades, cartridge shops, and repair counters.",
 };
 
 export default function RootLayout({ children }) {
@@ -11,12 +11,12 @@ export default function RootLayout({ children }) {
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link
-          href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Space+Grotesk:wght@400;500;600;700&display=swap"
+          href="https://fonts.googleapis.com/css2?family=Bungee&family=Space+Grotesk:wght@400;500;600;700&display=swap"
           rel="stylesheet"
         />
       </head>
       <body>
-        <div className="crt-overlay" aria-hidden="true"></div>
+        <div className="grain-overlay" aria-hidden="true"></div>
         {children}
       </body>
     </html>

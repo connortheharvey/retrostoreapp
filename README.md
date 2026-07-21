@@ -1,57 +1,44 @@
-# RetroStorePortal
+# RetroFind
 
 A directory + review site for retro video game stores — arcades, cartridge shops, repair counters.
-Built with Next.js (frontend + API) and Supabase (database).
+Built with Next.js (frontend + API) and Supabase (database + photo storage).
 
-## What's in this folder
-- `app/` — the website (pages + API routes)
-- `supabase/schema.sql` — the database structure. Run this once in Supabase.
-- `.env.example` — copy to `.env.local` and fill in your own keys (see below)
+## What's new in this version
+- Full redesign (arcade marquee / chrome look)
+- Real seed data: 12 actual New Hampshire retro game stores with coordinates
+- "Find stores near me" — uses your browser location to sort by distance
+- One-tap links to open any store directly in Google Maps or Apple Maps
+- Every store has its own page with a photo gallery and an upload button
 
-## Run it on your own computer (optional, for testing)
-```
-npm install
-npm run dev
-```
-Then open http://localhost:3000 — but it won't load any data until you've set up Supabase (next section).
+## Setup — if this is your first time
+Follow the steps in the previous version of this README: create a Supabase project, run `supabase/schema.sql`
+in the SQL Editor, then deploy to Vercel with the four environment variables
+(`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `ADMIN_PASSWORD`).
 
-## Get it live on the internet — step by step
+## Setup — if you already had the app running
+You only need to do one more thing: run the new migration.
+1. Go to your Supabase project → **SQL Editor** → **New query**
+2. Open `supabase/update-v2.sql` from this project, copy its entire contents, paste it in
+3. Click **Run**
 
-### 1. Create a Supabase project (free) — this is your database
-1. Go to https://supabase.com and sign up
-2. Click "New Project", give it any name, choose a region near you, set a database password (save it somewhere)
-3. Once it's created, go to the SQL Editor tab, paste in the entire contents of `supabase/schema.sql`, and click Run
-4. Go to Settings > API — you'll need three values from this page in step 3 below:
-   - Project URL
-   - anon public key
-   - service_role secret key (keep this one truly secret — never put it in frontend code)
+This adds:
+- Location columns on stores (for "near me" sorting)
+- A `photos` table
+- A public Storage bucket called `store-photos` for uploaded images
+- Real New Hampshire store listings (and removes the 3 placeholder ones from before)
 
-### 2. Create a GitHub account and upload this project (free)
-1. Go to https://github.com and sign up if you don't have an account
-2. Create a new repository (e.g. retrostoreportal)
-3. Upload this whole folder to it (GitHub's website lets you drag-and-drop files, or use GitHub Desktop if you prefer a normal app instead of the command line)
+Then push your updated code to GitHub as usual and let Vercel redeploy — no new environment variables needed.
 
-### 3. Deploy to Vercel (free) — this is your hosting
-1. Go to https://vercel.com and sign up (you can sign up directly with your GitHub account)
-2. Click "Add New Project" and select the GitHub repo you just created
-3. Before clicking Deploy, open "Environment Variables" and add these four:
-   - NEXT_PUBLIC_SUPABASE_URL -> your Project URL from Supabase
-   - NEXT_PUBLIC_SUPABASE_ANON_KEY -> your anon public key
-   - SUPABASE_SERVICE_ROLE_KEY -> your service role secret key
-   - ADMIN_PASSWORD -> make up a strong password — this is what YOU will use to log into /admin to moderate reviews
-4. Click Deploy. In a minute or two, Vercel gives you a live link like retrostoreportal.vercel.app
+## A security note on photo uploads
+Right now, anyone visiting the site can upload a photo to any store — there's no login system yet.
+This is fine for an early prototype, but before a public launch you'll want to add at least one of:
+- A simple upload rate limit
+- Basic image moderation (the `/admin` page doesn't currently cover photos — only reviews)
+- A "report photo" button, mirroring the one reviews already have
 
-That link is a real, working website anyone can visit.
-
-### 4. Moderating reviews
-Go to yourdomain.com/admin and log in with the ADMIN_PASSWORD you set. Any review a visitor "Reports" shows up here, and you can restore it or delete it permanently.
-
-### 5. (Later) A custom domain
-Buy a domain (e.g. from Namecheap or directly through Vercel) and connect it under your Vercel project's Settings > Domains tab. This costs roughly $10-15/year.
+Happy to build any of those next if you want to keep going.
 
 ## Costs at this stage
-- Supabase free tier: $0 (plenty for a new app)
-- Vercel free tier: $0 (plenty for a new app)
-- Domain name: ~$12/year, optional at first (the .vercel.app link works fine for testing)
-
-Total to get a real, live, working app: $0 to start.
+- Supabase free tier: $0 (includes 1GB of file storage — plenty of photos before you'd need to pay)
+- Vercel free tier: $0
+- Domain name: ~$12/year, optional
