@@ -149,12 +149,6 @@ export default function Home() {
     }
   }
 
-  const totalReviews = stores.reduce((s, b) => s + (b.reviews?.length || 0), 0);
-  const allRatings = stores.flatMap((b) => (b.reviews || []).map((r) => r.rating));
-  const overallAvg = allRatings.length
-    ? (allRatings.reduce((a, b) => a + b, 0) / allRatings.length).toFixed(1)
-    : "—";
-
   let list = stores.filter(
     (s) =>
       s.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -177,43 +171,48 @@ export default function Home() {
         <div className="site-header-inner">
           <div className="brand">
             <div>
-              <span className="logo">RETROFIND</span>
-              <small>&gt; find your next cartridge_</small>
+              <span className="logo">RetroFind</span>
+              <small>find your next cartridge</small>
             </div>
           </div>
           <button className="btn btn-primary" onClick={() => setShowAddModal(true)}>
             + Add a Store
           </button>
         </div>
-        <div className="marquee-lights" aria-hidden="true">
-          {Array.from({ length: 40 }).map((_, i) => <span key={i}></span>)}
-        </div>
       </header>
 
       <div className="hero">
-        <div className="hero-copy">
-          <h1>
-            <span className="chrome-text">Find the <span className="pink">good</span> retro stores.</span>
-          </h1>
-          <p className="sub">
-            Arcades, cartridge shops, repair counters — reviewed by the people who actually dig through
-            the bins. Insert coin to continue<span className="blink-cursor">&nbsp;</span>
-          </p>
-          <div className="hero-stats">
-            <div className="stat"><b>{stores.length}</b><span>Stores Logged</span></div>
-            <div className="stat"><b>{totalReviews}</b><span>Reviews</span></div>
-            <div className="stat"><b>{overallAvg}</b><span>Avg Rating</span></div>
+        <svg className="confetti c1" width="70" height="70" viewBox="0 0 70 70"><path d="M5 35 Q15 10 25 35 T45 35 T65 35" stroke="var(--ink)" strokeWidth="4" fill="none" strokeLinecap="round"/></svg>
+        <svg className="confetti c2" width="50" height="50" viewBox="0 0 50 50"><polygon points="25,4 46,44 4,44" fill="var(--yellow)" stroke="var(--ink)" strokeWidth="3"/></svg>
+        <svg className="confetti c3" width="46" height="46" viewBox="0 0 46 46"><circle cx="23" cy="23" r="18" fill="none" stroke="var(--pink)" strokeWidth="8"/><circle cx="23" cy="23" r="18" fill="none" stroke="var(--ink)" strokeWidth="2"/></svg>
+        <svg className="confetti c4" width="40" height="40" viewBox="0 0 40 40"><rect x="6" y="6" width="28" height="28" fill="var(--cyan)" stroke="var(--ink)" strokeWidth="3" transform="rotate(20 20 20)"/></svg>
+
+        <div className="hero-inner">
+          <div className="hero-copy">
+            <h1>
+              Find the <span className="pink">good</span> retro stores.
+            </h1>
+            <p className="sub">
+              Arcades, cartridge shops, repair counters — reviewed by the people who actually dig through
+              the bins.
+            </p>
+          </div>
+          <div className="mascot-wrap">
+            <svg className="console" viewBox="0 0 200 160" width="190">
+              <rect x="20" y="40" width="160" height="80" rx="14" fill="#FFFBEF" stroke="#161616" strokeWidth="4"/>
+              <rect x="40" y="60" width="50" height="16" rx="4" fill="#161616"/>
+              <circle cx="150" cy="68" r="10" fill="var(--cyan)" stroke="#161616" strokeWidth="3"/>
+              <circle cx="130" cy="90" r="10" fill="var(--yellow)" stroke="#161616" strokeWidth="3"/>
+              <rect x="85" y="20" width="30" height="26" rx="4" fill="var(--pink)" stroke="#161616" strokeWidth="3"/>
+            </svg>
           </div>
         </div>
-        <div className="mascot-wrap">
-          <svg className="console" viewBox="0 0 200 160" width="190">
-            <rect x="20" y="40" width="160" height="80" rx="14" fill="#231F2E" stroke="#FF2D78" strokeWidth="3"/>
-            <rect x="40" y="60" width="50" height="16" rx="4" fill="#0B0B10"/>
-            <circle cx="150" cy="68" r="10" fill="#22E5B0"/>
-            <circle cx="130" cy="90" r="10" fill="#FFB627"/>
-            <rect x="85" y="20" width="30" height="26" rx="4" fill="#FF2D78"/>
-          </svg>
-        </div>
+      </div>
+
+      <div className="how-it-works">
+        <div className="how-step"><div className="shape">🔎</div><div><b>Find</b><span>Search or use your location</span></div></div>
+        <div className="how-step"><div className="shape">🚗</div><div><b>Visit</b><span>Get directions in one tap</span></div></div>
+        <div className="how-step"><div className="shape">⭐</div><div><b>Rate</b><span>Leave a review, add a photo</span></div></div>
       </div>
 
       <div className="controls">
